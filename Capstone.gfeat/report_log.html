@@ -1,0 +1,210 @@
+<HTML><HEAD>
+<!--refreshstart-->
+
+<!--refreshstop-->
+<link REL=stylesheet TYPE=text/css href=.files/fsl.css>
+<TITLE>FSL</TITLE></HEAD><BODY><OBJECT data=report.html></OBJECT>
+<h2>Progress Report / Log</h2>
+Started at Thu Mar 31 22:59:11 PDT 2016<p>
+Feat main script<br><pre>
+
+/bin/cp /tmp/feat_admIBQ.fsf design.fsf
+
+/usr/share/fsl/5.0/bin/feat_model design
+
+mkdir .files;cp /usr/share/fsl/5.0/doc/fsl.css .files;cp -r /usr/share/fsl/5.0/doc/images .files/images
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat2_pre   /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat -gfeatprep
+23334
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat3a_flame -j 23334  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat -I 1 -flame1
+30309
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat3b_flame -j 30309 -t ./.flame
+30840
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat3c_flame -j 30840  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat -flame3
+31138
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat4_post -j 31138  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat -poststats 1
+31246
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 1 -l logs -N feat5_stop -j 31246  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat -stop
+32230
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 1 -l logs -N feat5_stop -j 32230  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat -stop
+</pre><hr>Higher-level input files preparation<br><pre>
+
+/usr/share/fsl/5.0/bin/featregapply /media/mike/UNTITLED/Autism/freesurfer_functional/c1080/bold/001/funct_data_mc_tempfilt_Capstone++.feat
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in example_func -out frgrot_vTiJPu -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mean_func -out frgrot_rh0qcn -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/cope1 -out frgrot_qLukG2 -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/varcope1 -out frgrot_DBqCUl -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mask -out frgrot_NjfyXE -applyxfm -init reg/example_func2standard.mat -interp nearestneighbour -datatype char
+
+
+/usr/share/fsl/5.0/bin/featregapply /media/mike/UNTITLED/Autism/freesurfer_functional/c1044/bold/001/funct_data_mc_tempfilt_Capstone++.feat
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in example_func -out frgrot_k80clK -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mean_func -out frgrot_6bNSZJ -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/cope1 -out frgrot_5zuNto -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/varcope1 -out frgrot_d71u7J -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mask -out frgrot_0cPDhV -applyxfm -init reg/example_func2standard.mat -interp nearestneighbour -datatype char
+
+
+/usr/share/fsl/5.0/bin/featregapply /media/mike/UNTITLED/Autism/freesurfer_functional/c1045/bold/001/funct_data_mc_tempfilt_Capstone++.feat
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in example_func -out frgrot_hxXvSg -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mean_func -out frgrot_oNQHPY -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/cope1 -out frgrot_NBDY5M -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/varcope1 -out frgrot_28TLm1 -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mask -out frgrot_OOVuNm -applyxfm -init reg/example_func2standard.mat -interp nearestneighbour -datatype char
+
+
+/usr/share/fsl/5.0/bin/featregapply /media/mike/UNTITLED/Autism/freesurfer_functional/c1089/bold/001/funct_data_mc_tempfilt_Capstone++++.feat
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in example_func -out frgrot_hSfKGG -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mean_func -out frgrot_uZl61y -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/cope1 -out frgrot_2V2T4l -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/varcope1 -out frgrot_einbRD -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mask -out frgrot_Xj2dW0 -applyxfm -init reg/example_func2standard.mat -interp nearestneighbour -datatype char
+
+
+/usr/share/fsl/5.0/bin/featregapply /media/mike/UNTITLED/Autism/freesurfer_functional/c1132/bold/001/funct_data_mc_tempfilt_Capstone++.feat
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in example_func -out frgrot_vAt6e7 -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mean_func -out frgrot_5GUuF3 -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/cope1 -out frgrot_OZq0YQ -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/varcope1 -out frgrot_kSSSo8 -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mask -out frgrot_2hf5Lq -applyxfm -init reg/example_func2standard.mat -interp nearestneighbour -datatype char
+
+
+/usr/share/fsl/5.0/bin/featregapply /media/mike/UNTITLED/Autism/freesurfer_functional/c1133/bold/001/func_data_mc_tempfilt_Capstone+.feat
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in example_func -out frgrot_yc50RK -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mean_func -out frgrot_are4Fr -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/cope1 -out frgrot_ZqbGcf -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/varcope1 -out frgrot_1NxP8p -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mask -out frgrot_q8uj5J -applyxfm -init reg/example_func2standard.mat -interp nearestneighbour -datatype char
+
+
+/usr/share/fsl/5.0/bin/featregapply /media/mike/UNTITLED/Autism/freesurfer_functional/c1035/bold/001/func_data_mc_tempfilt_Capstone+.feat
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in example_func -out frgrot_IZEg9Y -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mean_func -out frgrot_5A1NsC -applyxfm -init reg/example_func2standard.mat -interp spline -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/cope1 -out frgrot_mCFbFl -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in stats/varcope1 -out frgrot_7DH3FJ -applyxfm -init reg/example_func2standard.mat -interp trilinear -datatype float
+
+
+/usr/share/fsl/5.0/bin/flirt -ref reg/standard -in mask -out frgrot_huudB5 -applyxfm -init reg/example_func2standard.mat -interp nearestneighbour -datatype char
+
+
+/usr/share/fsl/5.0/bin/fslmaths /media/mike/UNTITLED/Autism/freesurfer_functional/c1080/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg/standard bg_image
+
+/usr/share/fsl/5.0/bin/fslmerge -t mask  /media/mike/UNTITLED/Autism/freesurfer_functional/c1080/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mask /media/mike/UNTITLED/Autism/freesurfer_functional/c1044/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mask /media/mike/UNTITLED/Autism/freesurfer_functional/c1045/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mask /media/mike/UNTITLED/Autism/freesurfer_functional/c1089/bold/001/funct_data_mc_tempfilt_Capstone++++.feat/reg_standard/mask /media/mike/UNTITLED/Autism/freesurfer_functional/c1132/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mask /media/mike/UNTITLED/Autism/freesurfer_functional/c1133/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/mask /media/mike/UNTITLED/Autism/freesurfer_functional/c1035/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/mask
+
+mkdir -p inputreg
+
+/usr/share/fsl/5.0/bin/fslmaths ../mask -mul 7 -Tmean masksum -odt short
+
+/usr/share/fsl/5.0/bin/fslmaths masksum -thr 7 -add masksum masksum
+
+/usr/share/fsl/5.0/bin/overlay 0 0 -c ../bg_image -a masksum 0.9 14 masksum_overlay
+
+/usr/share/fsl/5.0/bin/slicer masksum_overlay -S 2 750 masksum_overlay.png
+
+/usr/share/fsl/5.0/bin/fslmaths masksum -mul 0 maskunique
+
+/usr/share/fsl/5.0/bin/fslmaths /media/mike/UNTITLED/Autism/freesurfer_functional/c1080/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mask -mul -1 -add 1 -mul 1 -add maskunique maskunique
+
+/usr/share/fsl/5.0/bin/fslmaths /media/mike/UNTITLED/Autism/freesurfer_functional/c1044/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mask -mul -1 -add 1 -mul 2 -add maskunique maskunique
+
+/usr/share/fsl/5.0/bin/fslmaths /media/mike/UNTITLED/Autism/freesurfer_functional/c1045/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mask -mul -1 -add 1 -mul 3 -add maskunique maskunique
+
+/usr/share/fsl/5.0/bin/fslmaths /media/mike/UNTITLED/Autism/freesurfer_functional/c1089/bold/001/funct_data_mc_tempfilt_Capstone++++.feat/reg_standard/mask -mul -1 -add 1 -mul 4 -add maskunique maskunique
+
+/usr/share/fsl/5.0/bin/fslmaths /media/mike/UNTITLED/Autism/freesurfer_functional/c1132/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mask -mul -1 -add 1 -mul 5 -add maskunique maskunique
+
+/usr/share/fsl/5.0/bin/fslmaths /media/mike/UNTITLED/Autism/freesurfer_functional/c1133/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/mask -mul -1 -add 1 -mul 6 -add maskunique maskunique
+
+/usr/share/fsl/5.0/bin/fslmaths /media/mike/UNTITLED/Autism/freesurfer_functional/c1035/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/mask -mul -1 -add 1 -mul 7 -add maskunique maskunique
+
+/usr/share/fsl/5.0/bin/fslmaths masksum -thr 6 -uthr 6 -bin -mul maskunique maskunique
+
+/usr/share/fsl/5.0/bin/overlay 0 0 ../bg_image -a maskunique 0.9 7 maskunique_overlay
+
+/usr/share/fsl/5.0/bin/slicer maskunique_overlay -S 2 750 maskunique_overlay.png
+
+/bin/cp /usr/share/fsl/5.0/etc/luts/ramp.gif .ramp.gif
+
+/usr/share/fsl/5.0/bin/fslmaths mask -Tmin mask
+
+/usr/share/fsl/5.0/bin/fslmerge -t mean_func  /media/mike/UNTITLED/Autism/freesurfer_functional/c1080/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mean_func /media/mike/UNTITLED/Autism/freesurfer_functional/c1044/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mean_func /media/mike/UNTITLED/Autism/freesurfer_functional/c1045/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mean_func /media/mike/UNTITLED/Autism/freesurfer_functional/c1089/bold/001/funct_data_mc_tempfilt_Capstone++++.feat/reg_standard/mean_func /media/mike/UNTITLED/Autism/freesurfer_functional/c1132/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/mean_func /media/mike/UNTITLED/Autism/freesurfer_functional/c1133/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/mean_func /media/mike/UNTITLED/Autism/freesurfer_functional/c1035/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/mean_func
+
+/usr/share/fsl/5.0/bin/fslmaths mean_func -Tmean mean_func
+
+/usr/share/fsl/5.0/bin/fslmerge -t cope1  /media/mike/UNTITLED/Autism/freesurfer_functional/c1080/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/stats/cope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1044/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/stats/cope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1045/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/stats/cope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1089/bold/001/funct_data_mc_tempfilt_Capstone++++.feat/reg_standard/stats/cope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1132/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/stats/cope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1133/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/stats/cope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1035/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/stats/cope1
+
+/usr/share/fsl/5.0/bin/fslmaths cope1 -mas mask cope1
+
+printf '0.9990771428571429 ' >> design.lcon
+
+/usr/share/fsl/5.0/bin/fslmerge -t varcope1  /media/mike/UNTITLED/Autism/freesurfer_functional/c1080/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/stats/varcope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1044/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/stats/varcope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1045/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/stats/varcope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1089/bold/001/funct_data_mc_tempfilt_Capstone++++.feat/reg_standard/stats/varcope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1132/bold/001/funct_data_mc_tempfilt_Capstone++.feat/reg_standard/stats/varcope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1133/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/stats/varcope1 /media/mike/UNTITLED/Autism/freesurfer_functional/c1035/bold/001/func_data_mc_tempfilt_Capstone+.feat/reg_standard/stats/varcope1
+
+/usr/share/fsl/5.0/bin/fslmaths varcope1 -mas mask varcope1
+</pre><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></BODY></HTML>

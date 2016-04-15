@@ -1,0 +1,360 @@
+---
+title: "Capstone Project EDA"
+author: "Michael An"
+date: "April 7, 2016"
+output:
+  html_document: default
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+ source("/media/mike/UNTITLED/Foundations_Course/Capstone/exploratory_script_load.R")
+```
+
+<!-- #Just load larger bin data -->
+<!-- ```{r} -->
+<!-- load("4width_binned_data.RData") -->
+<!-- ``` -->
+
+<!-- #Alternate dataset, time points binned into larger intervals -->
+<!-- ```{r} -->
+
+<!--  #pick out the biological active time points -->
+<!--  activity.bio.pts <- subset(c1045.as.column, subset = BrainMask != 0, -->
+<!--         select = c(FALSE,FALSE,FALSE,paradigm$Biological == 1)) %>% -->
+<!--    t() %>% data.frame() -->
+
+
+<!-- rest.bio.pts <- subset(c1045.as.column, subset = BrainMask != 0, -->
+<!--        select = c(FALSE,FALSE,FALSE,paradigm$Random == 1)) %>% -->
+<!--    t() %>% data.frame() -->
+
+<!-- binwidth <- 4 -->
+<!--  temp <- aggregate(activity.bio.pts, -->
+<!--                    list(as.factor(binwidth*floor((1:nrow(activity.bio.pts))/binwidth))), -->
+<!--                                        mean) -->
+
+<!--  c1045.as.column <- cbind( -->
+<!--    subset(c1045.as.column, subset = BrainMask != 0, -->
+<!--         select = c(1,2,3)), -->
+<!--         t(temp[,-1])) -->
+
+<!-- paradigm <- data.frame(rep(1, nrow(temp))) -->
+<!-- names(paradigm) <- "Biological" -->
+
+
+<!-- rm(list = "temp") -->
+
+<!--  temp <- aggregate(rest.bio.pts, -->
+<!--                    list(as.factor(binwidth*floor((1:nrow(rest.bio.pts))/binwidth))), -->
+<!--                                        mean) -->
+<!--  c1045.as.column <- cbind(c1045.as.column, -->
+<!--         t(temp[,-1])) -->
+
+<!-- paradigm <- rbind(paradigm, data.frame(Biological = rep(0, nrow(temp)))) -->
+<!-- paradigm$Random <- 1-paradigm$Biological -->
+<!-- paradigm <- transform(paradigm, Biological = as.logical(Biological), Random = as.logical(Random)) -->
+
+<!--  rm(list = "temp") -->
+
+
+<!-- ``` -->
+
+
+#Alternate Dataset: Fewer runs of data
+```{r}
+num.runs <- 4
+temp <- subset(c1045.as.column, subset = BrainMask != 0)
+#temp[,c(4:9,(num.runs*12+9):(ncol(c1045.as.column)))] <- list(NULL)
+
+skip <- 1
+#skip the first 2 runs, get the next "num.runs" runs
+temp[,c(4:9,(10):(12*skip+9),((num.runs+skip)*12+9+1):(ncol(c1045.as.column)))] <- list(NULL)
+
+
+#temp2 <- rep(1,nrow(paradigm))
+#temp2[c(1:6,(num.runs*12+6):nrow(paradigm))] <- 0
+#paradigm <- paradigm[-c(1:6,(num.runs*12+6):nrow(paradigm)),]
+
+#skip the first 2 runs, get the next "num.runs" runs
+paradigm <- paradigm[-c(1:6,7:(skip*12+6),((num.runs+skip)*12+6+1):nrow(paradigm)),]
+c1045.as.column <- temp
+
+```
+
+
+##Histogram of time activity points for (L) biological motion time points, (M) random motion time points, (R) all time points
+```{r}
+
+#plot histograms of time activity points for different task, over all voxels
+p1 <- ggplot(data=stack(subset(c1045.as.column, subset = BrainMask != 0), 
+                select = c(FALSE,FALSE,FALSE,paradigm$Biological) )) +
+ geom_histogram(aes(x=values))
+
+p2 <- ggplot(data=stack(subset(c1045.as.column, subset = BrainMask != 0), 
+                        select = c(FALSE,FALSE,FALSE,paradigm$Random) )) +
+  geom_histogram(aes(x=values))
+
+p3 <- ggplot(data=stack(subset(c1045.as.column, subset = BrainMask != 0), 
+                        select = ! (names(c1045.as.column) %in% c("BrainMask", "ZStat", "ClusterMask")) )) +
+  geom_histogram(aes(x=values))
+
+grid.arrange(p1,p2,p3,ncol=3)
+```
+
+
+
+##Same histograms as above, but ONLY only voxels deemed "active" in biological task, compared to random task
+```{r}
+#plot histogram of time activity for different tasks, over ONLY active voxels
+p1 <- ggplot(data=stack(subset(c1045.as.column, subset = BrainMask != 0 & ClusterMask > 0), 
+                        select = c(FALSE,FALSE,FALSE,paradigm$Biological) )) +
+  geom_histogram(aes(x=values))
+
+p2 <- ggplot(data=stack(subset(c1045.as.column, subset = BrainMask != 0 & ClusterMask >0 ), 
+                        select = c(FALSE,FALSE,FALSE,paradigm$Random) )) +
+  geom_histogram(aes(x=values))
+
+p3 <- ggplot(data=stack(subset(c1045.as.column, subset = BrainMask != 0 & ClusterMask > 0), 
+                        select = ! (names(c1045.as.column) %in% c("BrainMask", "ZStat", "ClusterMask")) )) +
+  geom_histogram(aes(x=values))
+
+grid.arrange(p1,p2,p3,ncol=3)
+```
+
+##Scatterplot of BOLD Activity vs Z Statistic (for biological > random) over time points with biological task ON and OFF, and time points with random task ON and OFF
+```{r}
+#gather all time activitry points into one column, for all masked points.
+#introduce group factors for biological vs motion, and activation region vs. not activated
+result <- subset(c1045.as.column, subset = BrainMask != 0) %>%
+  gather(key = "Label", value = "Activity", 4:ncol(c1045.as.column)) %>%
+  mutate(on.off = Label %in% names(c1045.as.column)[c(FALSE, FALSE, FALSE, paradigm$Biological)])
+result$color.groups <- "None"
+result$color.groups[result$ClusterMask == 0 & result$on.off == TRUE] <- "1 Biological, Not Active"
+result$color.groups[result$ClusterMask == 0 & result$on.off == FALSE] <- "2 Random, Not Active"
+result$color.groups[result$ClusterMask > 0 & result$on.off == TRUE] <- "3 Biological, Activated"
+result$color.groups[result$ClusterMask > 0 & result$on.off == FALSE] <- "4 Random, Activated"
+
+result$color.groups <- as.factor(result$color.groups)
+
+#get just a small sample (1%) of the activity data, otherwise too many voxels
+sampleres <- result %>% group_by(on.off) %>% sample_frac(size = .01, replace = FALSE)
+
+
+#scatterplot of Z Statistic (biological > random) vs activity levels,
+#for biological task ON, random taks ON
+ggplot() +
+  geom_point(data = sampleres, aes(x=ZStat, y=Activity, color=color.groups)) +
+  labs(y = "BOLD Intensity", x="Z Statistic") + 
+  geom_line(data = sampleres, aes(x=floor(ZStat*10)/10,y=floor(Activity/5)*5, color = paste("Average over activation = ",on.off)), stat="summary",   fun.y = mean) +
+  scale_color_manual(values=c("#FFCCFF", "#9999CC", "#66CC99", "#3399CC", "Red", "Blue"))
+```
+
+##Same plot as above, but with the BOLD signal at each voxel noramlized (means subtracted from each voxel's time plot)
+```{r}
+###repeat the above, but using CENTERED fMRI data (mean centered at 0)
+c1045.as.column.centered <- c1045.as.column
+c1045.as.column.centered[,4:ncol(c1045.as.column.centered)] <-
+  sweep( c1045.as.column.centered[,4:ncol(c1045.as.column.centered)], 1, 
+         apply(c1045.as.column.centered[,4:ncol(c1045.as.column.centered)], 1, mean),
+         "-"  )
+
+result <- subset(c1045.as.column.centered, subset = BrainMask != 0) %>%
+  gather(key = "Label", value = "Activity", 4:ncol(c1045.as.column.centered)) %>%
+  mutate(on.off = Label %in% names(c1045.as.column.centered)[c(FALSE, FALSE, FALSE, paradigm$Biological)])
+result$color.groups <- "None"
+result$color.groups[result$ClusterMask == 0 & result$on.off == TRUE] <- "1 Biological, Not Active"
+result$color.groups[result$ClusterMask == 0 & result$on.off == FALSE] <- "2 Random, Not Active"
+result$color.groups[result$ClusterMask > 0 & result$on.off == TRUE] <- "3 Biological, Activated"
+result$color.groups[result$ClusterMask > 0 & result$on.off == FALSE] <- "4 Random, Activated"
+
+result$color.groups <- as.factor(result$color.groups)
+
+#get just a small sample (1%) of the activity data, otherwise too many voxels
+sampleres <- result %>% group_by(on.off) %>% sample_frac(size = .01, replace = FALSE)
+
+#scatterplot of Z Statistic (biological > random) vs activity levels,
+#for biological task ON, random taks ON
+ggplot() +
+  geom_point(data = sampleres, aes(x=ZStat, y=Activity, color=color.groups)) +
+  labs(y = "BOLD Signal Level", x="Z Stat") + 
+  geom_line(data = sampleres, aes(x=floor(ZStat*10)/10,y=floor(Activity/5)*5, color = paste("Average over activation = ",on.off)), stat="summary",   fun.y = mean) +
+  scale_color_manual(values=c("#FFCCFF", "#9999CC", "#66CC99", "#3399CC", "Red", "Blue"))
+```
+
+###Looking at relationship between BOLD activity levels, between biological, random
+##Histograms ONLY over active voxels
+```{r}
+
+
+
+###Looking at relationship between activity levels, between biological, random
+##plot histogram of activity levels for different tasks, over ONLY active voxels
+# p1 <- ggplot(data=stack(subset(c1045.as.column.centered, subset = BrainMask != 0 & ClusterMask > 0), 
+#                         select = -c(1,2,3) )) +
+#   geom_histogram(aes(x=values), binwidth = 3) +
+#   scale_x_continuous(limits = c(-100,100))
+# 
+# temp <- stack(subset(c1045.as.column.centered, subset = BrainMask != 0 & ClusterMask ==0 ), 
+#               select = -c(1,2,3) )
+# temp <- sample_frac(temp, size=.1, replace=FALSE)
+# 
+# 
+# p2 <- ggplot(data=temp) +
+#   geom_histogram(aes(x=values), binwidth = 3) +
+#   scale_x_continuous(limits = c(-100,100))
+# 
+# grid.arrange(p1,p2,ncol=2)
+
+
+temp <- gather(subset(c1045.as.column.centered, subset = BrainMask != 0),
+               key = "TimePoint", value = "result", 4:ncol(c1045.as.column.centered))
+temp <- sample_frac(temp, size=.1, replace=FALSE)
+ggplot(data=temp) +
+  geom_boxplot(aes(x= ClusterMask == 0, y=result)) +
+  ylim(c(-200,200)) +
+  labs(x="Active Region?", y="BOLD Intensity")
+ 
+
+
+
+
+##histogram of Z scores
+#ggplot(data=sample) +
+#  geom_histogram(aes(x=.5*log((1+ZStat)/(1-ZStat)))) +
+#  labs(x="Fisher transform of Z Stat") +
+#  facet_wrap(~on.off) 
+
+##boxplot of Z scores for on and off
+#ggplot(data=sample) +
+#  geom_boxplot(aes(x=on.off, y=ZStat))
+
+
+```
+
+
+
+##Histogram of % change between (a statistic of) biological motion time activity points, and (a statistic of) random motion time activity points
+```{r}
+
+temp <- as.matrix(subset(c1045.as.column, subset = BrainMask != 0, select = ! names(c1045.as.column) %in% c("BrainMask", "ZStat", "ClusterMask", "corr.biological", "bio.rand.max.min.diff")))
+
+stats.activities.bio <- apply(temp[,paradigm$Biological], 1, 
+                              function(x) {
+                                c(max = max(x),
+                                  median = median(x),
+                                  mean = mean(x),
+                                  quantile90 = quantile(x,probs=.9),
+                                  quantile80 = quantile(x,probs=.8),
+                                  quantile70 = quantile(x,probs=.7))       
+                                
+                              })
+
+
+temp <- as.matrix(subset(c1045.as.column, subset = BrainMask != 0, select = ! names(c1045.as.column) %in% c("BrainMask", "ZStat", "ClusterMask", "corr.biological", "bio.rand.max.min.diff")))
+
+
+stats.activities.rand <- apply(temp[,paradigm$Random], 1, 
+                              function(x) {
+                                c(max = max(x),
+                                  median = median(x),
+                                  mean = mean(x),
+                                  quantile90 = quantile(x,probs=.9),
+                                  quantile80 = quantile(x,probs=.8),
+                                  quantile70 = quantile(x,probs=.7))       
+                                
+                              })
+
+temp <- data.frame(matrix(0, nrow = nrow(c1045.as.column), ncol = 6))
+temp[c1045.as.column$BrainMask != 0,] <- t(stats.activities.bio - stats.activities.rand)
+names(temp) <- c("bio.rand.max.min.diff", "bio.rand.median.diff",
+                 "bio.rand.mean.diff", "bio.quantile90.diff",
+                 "bio.quantile80.diff", "bio.quantile70.diff")
+
+c1045.as.column <- cbind(c1045.as.column, temp)
+
+
+rm(list = c(stats.activities.bio, stats.activities.rand))
+
+p1 <- ggplot(data = subset(c1045.as.column, BrainMask != 0), 
+       aes(x=ZStat, y=bio.rand.max.min.diff)) +
+  geom_point(aes(color=ClusterMask)) +
+    geom_line(aes(x=floor(ZStat*10)/10,y=floor(bio.rand.max.min.diff/5)*5),stat = "summary", fun.y = mean) +
+  labs(x = "Z Statistic", y = "Max over biotask points MINUS min over randtask points")
+
+
+p2 <- ggplot(data = subset(c1045.as.column, BrainMask != 0), 
+       aes(x=ZStat, y=bio.rand.median.diff)) +
+  geom_point(aes(color=ClusterMask)) +
+    geom_line(aes(x=floor(ZStat*10)/10,y=floor(bio.rand.median.diff/5)*5),stat = "summary", fun.y = mean) +
+    labs(x = "Z Statistic", y = "Median of biotask points MINUS Median of randtask points")
+
+
+
+p3 <- ggplot(data = subset(c1045.as.column, BrainMask != 0), 
+       aes(x=ZStat, y=bio.rand.mean.diff)) +
+  geom_point(aes(color=ClusterMask)) +
+    geom_line(aes(x=floor(ZStat*10)/10,y=floor(bio.rand.mean.diff/5)*5),stat = "summary", fun.y = mean) +
+    labs(x = "Z Statistic", y = "Mean over biotask points MINUS Mean over randtask points")
+
+grid.arrange(p1,p2,p3,ncol = 3)
+```
+
+```{r}
+p1<- ggplot(data = subset(c1045.as.column, BrainMask != 0), 
+       aes(x=ZStat, y=bio.quantile90.diff)) +
+  geom_point(aes(color=ClusterMask)) +
+    geom_line(aes(x=floor(ZStat*10)/10,y=floor(bio.quantile90.diff/5)*5),stat = "summary", fun.y = mean) +
+    labs(x = "Z Statistic", y = "90% quartile over biotask points MINUS over randtask points")
+  
+
+
+p2<- ggplot(data = subset(c1045.as.column, BrainMask != 0), 
+       aes(x=ZStat, y=bio.quantile80.diff)) +
+  geom_point(aes(color=ClusterMask)) + 
+    geom_line(aes(x=floor(ZStat*10)/10,y=floor(bio.quantile80.diff/5)*5),stat = "summary", fun.y = mean) +
+    labs(x = "Z Statistic", y = "80% quartile over biotask points MINUS over randtask points")
+
+
+p3<- ggplot(data = subset(c1045.as.column, BrainMask != 0), 
+       aes(x=ZStat, y=bio.quantile70.diff)) +
+  geom_point(aes(color=ClusterMask)) +
+    geom_line(aes(x=floor(ZStat*10)/10,y=floor(bio.quantile70.diff/5)*5),stat = "summary", fun.y = mean) +
+  labs(x = "Z Statistic", y = "70% quartile over biotask points MINUS over randtask points")
+
+
+grid.arrange(p1, p2,p3,ncol = 3)
+
+c1045.as.column$bio.rand.max.min.diff <- NULL
+c1045.as.column$bio.rand.median.diff <- NULL
+c1045.as.column$bio.rand.mean.diff <- NULL
+c1045.as.column$bio.rand.quantile90.diff <- NULL
+c1045.as.column$bio.rand.quantile80.diff <- NULL
+c1045.as.column$bio.rand.quantile70.diff <- NULL
+
+```
+
+##Compute correlation coefficients between biological even paradigm, and time activity
+##signal for all voxels
+
+```{r}
+#c1045.as.column$corr.biological <- apply(subset(c1045.as.column, 
+#                                                select = ! names(c1045.as.column) %in% c("BrainMask", "ZStat", "ClusterMask", "corr.biological", "bio.rand.max.min.diff")),
+#                                         1, cor, paradigm$Biological)
+
+c1045.as.column$corr.biological <- apply(c1045.as.column[,c(4:(nrow(paradigm)+3))],
+                                         1, cor, paradigm$Biological)
+
+temp <- sample_frac(subset(c1045.as.column, BrainMask != 0), size = .1, replace = FALSE)
+
+ggplot(data = temp, aes(x=ZStat, y=.5*log((1+corr.biological)/(1-corr.biological)))) +
+  geom_point(aes(color=ClusterMask)) +
+  labs(y="Fisher transform of Correlation Coefficient")
+
+```
+
+
+

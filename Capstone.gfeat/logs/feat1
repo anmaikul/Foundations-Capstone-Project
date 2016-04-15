@@ -1,0 +1,27 @@
+
+/bin/cp /tmp/feat_admIBQ.fsf design.fsf
+
+/usr/share/fsl/5.0/bin/feat_model design
+
+mkdir .files;cp /usr/share/fsl/5.0/doc/fsl.css .files;cp -r /usr/share/fsl/5.0/doc/images .files/images
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat2_pre   /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat -gfeatprep
+23334
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat3a_flame -j 23334  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat -I 1 -flame1
+30309
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat3b_flame -j 30309 -t ./.flame
+30840
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat3c_flame -j 30840  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat -flame3
+31138
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 60 -l logs -N feat4_post -j 31138  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat -poststats 1
+31246
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 1 -l logs -N feat5_stop -j 31246  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat -stop
+32230
+
+/usr/share/fsl/5.0/bin/fsl_sub -T 1 -l logs -N feat5_stop -j 32230  /usr/share/fsl/5.0/bin/feat /home/mike/Documents/Foundations_Course/Capstone.gfeat/cope1.feat/design.fsf -D /home/mike/Documents/Foundations_Course/Capstone.gfeat -stop
+32472
