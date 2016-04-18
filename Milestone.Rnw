@@ -1,8 +1,11 @@
 \documentclass{report}
+\title{Project Milestone - Exploring Task based fMRI for Analysis over Less Data Collected}
+\author{Michael An}
 
 \begin{document}
 \SweaveOpts{concordance=TRUE}
 
+\maketitle
 
 \section{Introduction to the Problem}
 Magnetic Resonance Imaging (MRI) technology, applied specifically to the brain, has given researchers an unprecedented window into the brain and enabled them to investigate how the brain's internals appear and operate. In particular when speaking about brain function, functional MRI, or fMRI, enables us to measure brain activity at different points in the brain, and across an entire time period for which the information is recorded. We can design experiments where we scan while the subject performs a certain task, and we can look at the resulting imaging sequence over time and see if brain activity patterns change while the task is performed, and for what regions does this activity change occur. 
