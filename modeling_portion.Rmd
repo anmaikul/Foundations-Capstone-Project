@@ -1,0 +1,349 @@
+---
+title: "Modeling Portion of Capstone Project"
+author: "Michael An"
+date: "April 19, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(caTools)
+library(ROCR)
+library(glmnet)
+library(caret)
+```
+
+
+```{r, echo=FALSE}
+source("/home/mike/Documents/Foundations_Course/Capstone/exploratory_script_load.R")
+
+#Attach computed statistics to c1045.as.column.centered variable as well
+#In the process, have to recompute some statistics from EDA section 
+#for 2 run data
+
+temp <- as.matrix(subset(c1045.as.column, subset = BrainMask != 0, select = ! names(c1045.as.column) %in% c("BrainMask", "ZStat", "ClusterMask", "corr.biological", "bio.rand.max.min.diff")))
+
+stats.activities.bio <- apply(temp[,paradigm$Biological], 1, 
+                              function(x) {
+                                c(max = max(x),
+                                  median = median(x),
+                                  mean = mean(x),
+                                  quantile90 = quantile(x,probs=.9),
+                                  quantile80 = quantile(x,probs=.8),
+                                  quantile70 = quantile(x,probs=.7))       
+                                
+                              })
+
+
+temp <- as.matrix(subset(c1045.as.column, subset = BrainMask != 0, select = ! names(c1045.as.column) %in% c("BrainMask", "ZStat", "ClusterMask", "corr.biological", "bio.rand.max.min.diff")))
+
+
+stats.activities.rand <- apply(temp[,paradigm$Random], 1, 
+                              function(x) {
+                                c(max = max(x),
+                                  median = median(x),
+                                  mean = mean(x),
+                                  quantile90 = quantile(x,probs=.9),
+                                  quantile80 = quantile(x,probs=.8),
+                                  quantile70 = quantile(x,probs=.7))       
+                                
+                              })
+
+temp <- data.frame(matrix(0, nrow = nrow(c1045.as.column), ncol = 6))
+temp[c1045.as.column$BrainMask != 0,] <- t(stats.activities.bio - stats.activities.rand)
+names(temp) <- c("bio.rand.max.min.diff", "bio.rand.median.diff",
+                 "bio.rand.mean.diff", "bio.quantile90.diff",
+                 "bio.quantile80.diff", "bio.quantile70.diff")
+
+c1045.as.column <- cbind(c1045.as.column, temp)
+
+c1045.as.column$corr.biological <- apply(c1045.as.column[,c(4:(nrow(paradigm)+3))],
+                                         1, cor, paradigm$Biological)
+
+
+c1045.as.column.centered$bio.quantile90.diff <- 
+  c1045.as.column$bio.quantile90.diff
+c1045.as.column.centered$bio.quantile80.diff <-
+  c1045.as.column$bio.quantile80.diff
+c1045.as.column.centered$bio.quantile70.diff <-
+  c1045.as.column$bio.quantile70.diff
+c1045.as.column.centered$corr.biological <- 
+  c1045.as.column$corr.biological
+
+
+
+temp <- as.matrix(subset(c1045.as.column.centered.2runs, subset = BrainMask != 0, select = ! names(c1045.as.column.centered.2runs) %in% c("BrainMask", "ZStat", "ClusterMask", "corr.biological", "bio.rand.max.min.diff")))
+
+stats.activities.bio <- apply(temp[,paradigm.2runs$Biological], 1, 
+                              function(x) {
+                                c(max = max(x),
+                                  median = median(x),
+                                  mean = mean(x),
+                                  quantile90 = quantile(x,probs=.9),
+                                  quantile80 = quantile(x,probs=.8),
+                                  quantile70 = quantile(x,probs=.7))       
+                                
+                              })
+
+
+temp <- as.matrix(subset(c1045.as.column.centered.2runs, subset = BrainMask != 0, select = ! names(c1045.as.column.centered.2runs) %in% c("BrainMask", "ZStat", "ClusterMask", "corr.biological", "bio.rand.max.min.diff")))
+
+
+stats.activities.rand <- apply(temp[,paradigm.2runs$Random], 1, 
+                              function(x) {
+                                c(max = max(x),
+                                  median = median(x),
+                                  mean = mean(x),
+                                  quantile90 = quantile(x,probs=.9),
+                                  quantile80 = quantile(x,probs=.8),
+                                  quantile70 = quantile(x,probs=.7))       
+                                
+                              })
+
+temp <- data.frame(matrix(0, nrow = nrow(c1045.as.column.centered.2runs), ncol = 6))
+temp[c1045.as.column.centered.2runs$BrainMask != 0,] <- t(stats.activities.bio - stats.activities.rand)
+names(temp) <- c("bio.rand.max.min.diff", "bio.rand.median.diff",
+                 "bio.rand.mean.diff", "bio.quantile90.diff",
+                 "bio.quantile80.diff", "bio.quantile70.diff")
+
+c1045.as.column.centered.2runs <- cbind(c1045.as.column.centered.2runs, temp)
+
+c1045.as.column.centered.2runs$corr.biological <- apply(c1045.as.column.centered.2runs[,c(4:(nrow(paradigm.2runs)+3))],
+                                         1, cor, paradigm.2runs$Biological)
+```
+
+###Fitting a simple logistic model
+```{r, echo=FALSE}
+#Set generic names for the data, so you dont change the originals
+subject.image.mask <- c1045.mask
+model.data <- subset(c1045.as.column.centered, BrainMask != 0)
+model.data$ClusterMaskBinary <- model.data$ClusterMask > 0
+model.paradigm <- paradigm
+
+
+
+data.split.bool <- sample.split(model.data$ClusterMaskBinary, SplitRatio = .25)
+
+data.train <- subset(model.data, data.split.bool = TRUE)
+data.test <- subset(model.data, data.split.bool = FALSE)
+```
+
+```{r}
+#Logistic regression model
+ActivationModel <- glm(ClusterMaskBinary ~ . - BrainMask - ZStat - ClusterMask - ClusterMaskBinary , data = data.train, family = binomial)
+
+predictionTrain <- predict(ActivationModel, type="response" )
+
+tapply(predictionTrain, data.train$ClusterMaskBinary, mean)
+
+summary(ActivationModel)
+```
+
+
+#Drop the correlation coefficient as a covaraite, and rerun the logistic model fit
+
+```{r}
+#Fit logistic model over data with corr.biological removed
+ActivationModel <- glm(ClusterMaskBinary ~ . - BrainMask - ZStat - ClusterMask - ClusterMaskBinary - corr.biological, data = data.train, family = binomial)
+
+predictionTrain <- predict(ActivationModel, type="response" )
+
+tapply(predictionTrain, data.train$ClusterMaskBinary, mean)
+
+summary(ActivationModel)
+```
+
+#assess z stats of coefficients corresponding to time activity paradigm
+```{r, echo=FALSE}
+
+model.paradigm$pval <- coef(summary(ActivationModel))[,4][2:(nrow(model.paradigm)+4-3)] < 5e-2
+```
+
+
+
+#Analyze prediction accuracy using ROC curve and determine threshold to minimize false pos rate
+```{r}
+
+#Use ROCR library to plot ROC curve
+cluster.pred <- prediction(predictionTrain, model.data$ClusterMaskBinary)
+perform.func <- performance(cluster.pred, "tpr", "fpr")
+
+plot(perform.func, print.cutoffs.at=seq(.1,.9,.1))
+```
+
+```{r}
+
+#verify model by predicting the combined training and test set
+predictionTest <- predict(ActivationModel, type="response", newdata = model.data)
+
+confuse.matrix <- table(model.data$ClusterMaskBinary,
+                        predictionTest > .3)
+
+#sensitivity - true positive rate
+confuse.matrix[2,2]/(confuse.matrix[2,1]+confuse.matrix[2,2])
+
+#specificity - true negative rate
+confuse.matrix[1,1]/(confuse.matrix[1,1]+confuse.matrix[1,2])
+```
+
+
+
+#overlay activation map onto a reference image, and compare with precomputed group map 
+```{r, echo=FALSE}
+#create test cluster image based on the given prediction threshold
+
+prediction.all <- predict(ActivationModel, type="response", 
+                          newdata = model.data)
+
+#reference Nifti object to put out new mask into
+nifti.prediction.mask <- c1045.cluster.mask
+
+#create new space to put in the mask in image space
+#using the BrainMask > 0 mask
+temp <- array(0, dim = dim(nifti.prediction.mask@.Data))
+temp[subject.image.mask@.Data > 0] <- as.integer( prediction.all > .3 )
+
+#insert the data into the nifti object's .Data field 
+nifti.prediction.mask@.Data <- temp
+```
+
+```{r}
+#write and save resulting maps
+
+#writeNIfTI(nifti.prediction.mask, "c1045_logistic_classific_map", onefile=TRUE)
+
+#View the resulting image and mask
+overlay(c1045, ifelse(nifti.prediction.mask == 0, NA, nifti.prediction.mask), col.y = heat.colors(1))
+
+
+```
+
+```{r}
+overlay(c1045, ifelse(c1045.cluster.mask ==0, NA, 1),col.y=heat.colors(1))
+
+```
+
+
+#Repeat analysis above, but with using only 2 run's time points as predictors
+```{r, echo=FALSE}
+#Set generic names for the data, so you dont change the originals
+model.data <- subset(c1045.as.column.centered.2runs, BrainMask != 0)
+model.data$ClusterMaskBinary <- model.data$ClusterMask > 0
+model.paradigm <- paradigm.2runs
+
+data.split.bool <- sample.split(model.data$ClusterMaskBinary, SplitRatio = .25)
+
+data.train <- subset(model.data, data.split.bool = TRUE)
+data.test <- subset(model.data, data.split.bool = FALSE)
+```
+
+#Model Summary and Analysis for 2 run version
+```{r}
+#fit logistic model over 2 run worth of data
+ActivationModel <- glm(ClusterMaskBinary ~ . - BrainMask - ZStat - ClusterMask - ClusterMaskBinary - corr.biological, data = data.train, family = binomial)
+
+predictionTrain <- predict(ActivationModel, type="response" )
+
+summary(ActivationModel)
+```
+```{r}
+
+#Use ROCR library to plot ROC curve
+cluster.pred <- prediction(predictionTrain, model.data$ClusterMaskBinary)
+perform.func <- performance(cluster.pred, "tpr", "fpr")
+
+plot(perform.func, print.cutoffs.at=seq(.1,.9,.1))
+```
+```{r}
+
+#verify model by predicting the combined training and test set
+predictionTest <- predict(ActivationModel, type="response", newdata = model.data)
+
+confuse.matrix <- table(model.data$ClusterMaskBinary,
+                        predictionTest > .3)
+
+#sensitivity - true positive rate
+confuse.matrix[2,2]/(confuse.matrix[2,1]+confuse.matrix[2,2])
+
+#specificity - true negative rate
+confuse.matrix[1,1]/(confuse.matrix[1,1]+confuse.matrix[1,2])
+```
+
+#Generate images for 2 run results and compare to group map
+```{r, echo=FALSE}
+#create test cluster image based on the given prediction threshold
+
+prediction.all <- predict(ActivationModel, type="response", 
+                          newdata = model.data)
+
+#reference Nifti object to put out new mask into
+nifti.prediction.mask <- c1045.cluster.mask
+
+#create new space to put in the mask in image space
+#using the BrainMask > 0 mask
+temp <- array(0, dim = dim(nifti.prediction.mask@.Data))
+temp[subject.image.mask@.Data > 0] <- as.integer( prediction.all > .3 )
+
+#insert the data into the nifti object's .Data field 
+nifti.prediction.mask@.Data <- temp
+```
+```{r}
+#write and save resulting maps
+
+#writeNIfTI(nifti.prediction.mask, "c1045_logistic_classific_map", onefile=TRUE)
+
+#View the resulting image and mask
+overlay(c1045, ifelse(nifti.prediction.mask == 0, NA, nifti.prediction.mask), col.y = heat.colors(1))
+
+
+```
+```{r}
+overlay(c1045, ifelse(c1045.cluster.mask ==0, NA, 1),col.y=heat.colors(1))
+
+```
+
+#Explore PCA on the fMRI time series for the 2 run subset, and trian logistic model on PCA components instead of normal time points
+```{r}
+#generate PCA object from centered 2 run data
+princomp.obj <- preProcess(subset(c1045.as.column.centered.2runs,
+                          select = names(c1045.as.column.centered.2runs) %in% 
+                            grep("X", names(c1045.as.column.centered.2runs), value = TRUE)), 
+                   method=c("BoxCox", "center", 
+                            "scale", "pca") )
+
+#get the principal components
+PC <- predict(princomp.obj, subset(c1045.as.column.centered.2runs,
+                          select = names(c1045.as.column.centered.2runs) %in% 
+                            grep("X", names(c1045.as.column.centered.2runs), value = TRUE)))
+
+
+PC$ClusterMaskBinary <- c1045.as.column.centered.2runs$ClusterMask > 0
+
+data.split.bool <- sample.split(PC$ClusterMaskBinary, SplitRatio = .25)
+
+data.train <- subset(PC, data.split.bool == TRUE)
+data.test <- subset(PC, data.split.bool == FALSE)
+
+#fit a logistic model using the PCs found
+ActivationModel <- glm(ClusterMaskBinary ~ ., family=binomial, data =PC[,-(29:(ncol(PC)-1))] )
+prediction.all <- predict(ActivationModel, type="response")
+
+
+#ROC curve of pred results
+cluster.pred <- prediction(prediction.all, PC$ClusterMaskBinary)
+perform.func <- performance(cluster.pred, "tpr", "fpr")
+
+plot(perform.func, print.cutoffs.at=seq(.1,.9,.1))
+```
+
+```{r}
+#confusion matrix
+confuse.matrix <- table(PC$ClusterMaskBinary, prediction.all > .2)
+confuse.matrix
+
+confuse.matrix[2,2]/(confuse.matrix[2,1]+confuse.matrix[2,2])
+
+confuse.matrix[1,1]/(confuse.matrix[1,1]+confuse.matrix[1,2])
+
+```
+
